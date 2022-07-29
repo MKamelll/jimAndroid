@@ -1,0 +1,3 @@
+[submodule "jim"]
+	path = jim
+	url = https://github.com/MKamelll/jim.git
