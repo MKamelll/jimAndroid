@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 
@@ -25,6 +26,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import jim.src.Lexer;
+import jim.src.Parser;
+import jim.src.Primary;
+import jim.src.StmtExpr;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -96,7 +102,18 @@ public class CodeFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 String txt = edtTxtCode.getText().toString();
-                writeFile("example", txt);
+                var lexer = new Lexer(txt);
+                try {
+                    var parser = new Parser(lexer);
+                    var parseResult = parser.parse();
+                    if (!(parseResult.get(0) instanceof StmtExpr.Function))
+                        throw new Exception("Top level function expected, wrap your script in a function");
+                    String fName = ((Primary.Identifier) ((StmtExpr.Function) parseResult.get(0)).getIdentifier()).getValue().toString();
+                    writeFile(fName, txt);
+                } catch (Exception e) {
+                    Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
             }
         });
     }

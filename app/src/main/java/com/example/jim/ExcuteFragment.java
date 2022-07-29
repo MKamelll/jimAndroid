@@ -10,8 +10,11 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textview.MaterialTextView;
 
@@ -20,6 +23,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+
+import jim.src.Interpreter;
+import jim.src.Lexer;
+import jim.src.Parser;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -39,6 +46,8 @@ public class ExcuteFragment extends Fragment {
 
     private MaterialAutoCompleteTextView dropdownComplete;
     private String mExtension = ".jim";
+    private MaterialButton btnExcute;
+    private String mSrc;
 
     public ExcuteFragment() {
         // Required empty public constructor
@@ -89,12 +98,37 @@ public class ExcuteFragment extends Fragment {
             String functionName = file.substring(0, file.length() - mExtension.length());
             if (!functions.contains(functionName)) functions.add(functionName);
         }
-
         ArrayAdapter adapter = new ArrayAdapter(requireContext(), R.layout.autocomplete, functions);
         dropdownComplete.setAdapter(adapter);
+
+        dropdownComplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String fName = (String) adapterView.getItemAtPosition(i);
+                mSrc = readFile(fName);
+            }
+        });
+
+        btnExcute = view.findViewById(R.id.btnExcute);
+        btnExcute.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSrc == null) return;
+                Lexer lexer = new Lexer(mSrc);
+                try {
+                    Parser parser = new Parser(lexer);
+                    Interpreter interpreter = new Interpreter(parser.parse());
+                    String interpreterResult = interpreter.interpret().toString();
+                    Toast.makeText(requireContext(), interpreterResult, Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    private void readFile(String fname) {
+    private String readFile(String fname) {
         Context context = getContext();
         File path = context.getFilesDir();
         File file = new File(path,fname + mExtension);
@@ -117,5 +151,7 @@ public class ExcuteFragment extends Fragment {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+        return new String(buff);
     }
 }
