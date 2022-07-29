@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">jim</string>
+    <string name="code_hint">Enter a function...</string>
+    <string name="save_button">save</string>
+    <string name="nav_drawer_item1">Excute</string>
+    <string name="nav_drawer_item2">Code</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Excute fragment</string>
+</resources>

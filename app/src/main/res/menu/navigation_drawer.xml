@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group
+        android:id="@+id/actions"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/excuteFun"
+            android:title="@string/nav_drawer_item1"/>
+        <item
+            android:id="@+id/codeFun"
+            android:title="@string/nav_drawer_item2"/>
+    </group>
+</menu>
