@@ -63,6 +63,7 @@ public class ExcuteFragment extends Fragment {
     private ArrayList<Expression> mParseResult;
     private LinearLayout llArgs;
     private StmtExpr.Function mCurrFun;
+    private MaterialTextView mResultTxtView;
 
     public ExcuteFragment() {
         // Required empty public constructor
@@ -184,8 +185,8 @@ public class ExcuteFragment extends Fragment {
                 try {
                     var identifier = mCurrFun.getIdentifier();
                     var args = new ArrayList<Expression>();
-                    int childCount = llArgs.getChildCount();
-                    for (int i = 0; i < childCount; i++) {
+                    var length = mCurrFun.getParams().size();
+                    for (int i = 0; i < length; i++) {
                         var edtTxt = (TextInputEditText) llArgs.getChildAt(i);
                         double value = Double.valueOf(edtTxt.getText().toString());
                         args.add(new Primary.Number(value));
@@ -193,9 +194,13 @@ public class ExcuteFragment extends Fragment {
                     mParseResult.add(new StmtExpr.Call(identifier, args));
                     Interpreter interpreter = new Interpreter(mParseResult);
                     String interpreterResult = interpreter.interpret().toString();
-                    var txtView = new MaterialTextView(requireContext());
-                    txtView.setText(interpreterResult);
-                    llArgs.addView(txtView);
+                    if (mResultTxtView == null) {
+                        mResultTxtView = new MaterialTextView(requireContext());
+                        mResultTxtView.setText(interpreterResult);
+                        llArgs.addView(mResultTxtView);
+                    } else {
+                        mResultTxtView.setText(interpreterResult);
+                    }
                 } catch (Exception e) {
                     Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();
