@@ -2,6 +2,7 @@ package com.example.jim;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -14,11 +15,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -111,7 +114,8 @@ public class ExcuteFragment extends Fragment {
             String functionName = file.substring(0, file.length() - mExtension.length());
             if (!functions.contains(functionName)) functions.add(functionName);
         }
-        ArrayAdapter adapter = new ArrayAdapter(requireContext(), R.layout.autocomplete, functions);
+        var adapter = new ArrayAdapter<String>(requireContext(), R.layout.autocomplete, functions);
+        adapter.setNotifyOnChange(true);
         dropdownComplete.setAdapter(adapter);
 
         dropdownComplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -138,6 +142,38 @@ public class ExcuteFragment extends Fragment {
                     Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
+            }
+        });
+
+        dropdownComplete.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                String functionName = ((MaterialAutoCompleteTextView) view).getText().toString();
+                if (functionName.isEmpty()) return false;
+                ((MaterialAutoCompleteTextView) view).setEnabled(false);
+                var dialog = new MaterialAlertDialogBuilder(requireContext(),
+                        com.google.android.material.R.style.ThemeOverlay_MaterialComponents_MaterialAlertDialog);
+                dialog.setMessage("Delete '" + functionName + "'?");
+                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        ((MaterialAutoCompleteTextView) view).setEnabled(true);
+                    }
+                });
+                dialog.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if (delFile(functionName)) {
+                            llArgs.removeAllViews();
+                            adapter.remove(functionName);
+                            dropdownComplete.setText("");
+                            Toast.makeText(requireContext(), "Deleted '" + functionName + "'", Toast.LENGTH_LONG).show();
+                        }
+                        ((MaterialAutoCompleteTextView) view).setEnabled(true);
+                    }
+                });
+                dialog.show();
+                return true;
             }
         });
 
@@ -193,5 +229,16 @@ public class ExcuteFragment extends Fragment {
         }
 
         return new String(buff);
+    }
+
+    private boolean delFile(String fname) {
+        Context context = getContext();
+        File path = context.getFilesDir();
+        File file = new File(path,fname + mExtension);
+        if (file.exists()) {
+            file.delete();
+            return true;
+        }
+        return false;
     }
 }
