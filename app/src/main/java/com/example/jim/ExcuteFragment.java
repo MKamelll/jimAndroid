@@ -127,6 +127,7 @@ public class ExcuteFragment extends Fragment {
                     Parser parser = new Parser(lexer);
                     mParseResult = parser.parse();
                     mCurrFun = ((StmtExpr.Function) mParseResult.get(0));
+                    llArgs.removeAllViews();
                     for (var param : mCurrFun.getParams()) {
                         var edtTxt = new TextInputEditText(requireContext());
                         edtTxt.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
