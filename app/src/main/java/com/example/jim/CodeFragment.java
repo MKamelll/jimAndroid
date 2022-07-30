@@ -110,6 +110,7 @@ public class CodeFragment extends Fragment {
                         throw new Exception("Top level function expected, wrap your script in a function");
                     String fName = ((Primary.Identifier) ((StmtExpr.Function) parseResult.get(0)).getIdentifier()).getValue().toString();
                     writeFile(fName, txt);
+                    Toast.makeText(requireContext(), "Saved function '" + fName + "'!", Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
                     Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();

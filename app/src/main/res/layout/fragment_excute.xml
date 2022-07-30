@@ -33,4 +33,11 @@
         app:layout_constraintStart_toStartOf="@+id/dropdownFun"
         app:layout_constraintEnd_toEndOf="@+id/dropdownFun"/>
 
+    <LinearLayout
+        android:id="@+id/llArgs"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btnExcute"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

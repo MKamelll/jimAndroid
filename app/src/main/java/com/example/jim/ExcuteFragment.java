@@ -1,21 +1,27 @@
 package com.example.jim;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.textview.MaterialTextView;
 
 import java.io.File;
@@ -24,9 +30,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import jim.src.Expression;
 import jim.src.Interpreter;
 import jim.src.Lexer;
 import jim.src.Parser;
+import jim.src.Primary;
+import jim.src.StmtExpr;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -48,6 +57,9 @@ public class ExcuteFragment extends Fragment {
     private String mExtension = ".jim";
     private MaterialButton btnExcute;
     private String mSrc;
+    private ArrayList<Expression> mParseResult;
+    private LinearLayout llArgs;
+    private StmtExpr.Function mCurrFun;
 
     public ExcuteFragment() {
         // Required empty public constructor
@@ -92,6 +104,7 @@ public class ExcuteFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         dropdownComplete = view.findViewById(R.id.dropdownComplete);
+        llArgs = view.findViewById(R.id.llArgs);
         ArrayList<String> functions = new ArrayList<String>();
         File dirFiles = getContext().getFilesDir();
         for (String file : dirFiles.list()) {
@@ -106,6 +119,24 @@ public class ExcuteFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String fName = (String) adapterView.getItemAtPosition(i);
                 mSrc = readFile(fName);
+
+                if (mSrc == null) return;
+
+                try {
+                    Lexer lexer = new Lexer(mSrc);
+                    Parser parser = new Parser(lexer);
+                    mParseResult = parser.parse();
+                    mCurrFun = ((StmtExpr.Function) mParseResult.get(0));
+                    for (var param : mCurrFun.getParams()) {
+                        var edtTxt = new TextInputEditText(requireContext());
+                        edtTxt.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                        edtTxt.setHint(((Primary.Identifier) param).getValue().toString());
+                        llArgs.addView(edtTxt);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -113,13 +144,21 @@ public class ExcuteFragment extends Fragment {
         btnExcute.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mSrc == null) return;
-                Lexer lexer = new Lexer(mSrc);
                 try {
-                    Parser parser = new Parser(lexer);
-                    Interpreter interpreter = new Interpreter(parser.parse());
+                    var identifier = mCurrFun.getIdentifier();
+                    var args = new ArrayList<Expression>();
+                    int childCount = llArgs.getChildCount();
+                    for (int i = 0; i < childCount; i++) {
+                        var edtTxt = (TextInputEditText) llArgs.getChildAt(i);
+                        double value = Double.valueOf(edtTxt.getText().toString());
+                        args.add(new Primary.Number(value));
+                    }
+                    mParseResult.add(new StmtExpr.Call(identifier, args));
+                    Interpreter interpreter = new Interpreter(mParseResult);
                     String interpreterResult = interpreter.interpret().toString();
-                    Toast.makeText(requireContext(), interpreterResult, Toast.LENGTH_LONG).show();
+                    var txtView = new MaterialTextView(requireContext());
+                    txtView.setText(interpreterResult);
+                    llArgs.addView(txtView);
                 } catch (Exception e) {
                     Toast.makeText(requireContext(), e.toString(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();
